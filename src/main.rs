@@ -1,4 +1,4 @@
-use image::{GenericImageView, Rgba};
+use image::{GenericImageView, Rgba, Pixel};
 use std::io;
 fn main() {
     let mut input = String::new();
@@ -10,17 +10,31 @@ fn main() {
         Ok(image) => image,
         Err(error) => panic!("Something went terribly wrong: {:?}", error),
     };
+    let intensity_array = process_image_array(&rgba_array);
     println!("File Array lil sum like {:?}", rgba_array);
+
 }
 
-fn read_image(filename: &str) -> Result<Vec<u8>, image::ImageError> {
+
+fn process_image_array(image_array: &Vec<Rgba<u8>>) -> Vec<u8> {
+    let mut intensity_array: Vec<u8> = Vec::with_capacity(image_array.len());
+    for pixel in image_array {
+        intensity_array.push(calculate_grayscale_intensity(pixel));
+    }
+    return intensity_array;
+
+}
+
+fn read_image(filename: &str) -> Result<Vec<Rgba<u8>>, image::ImageError> {
     let img = image::open(filename)?;
     let (width, height) = img.dimensions();
-    let mut raw_pixels = Vec::with_capacity((width * height * 4) as usize);
+    let mut raw_pixels:Vec<Rgba<u8>> = Vec::with_capacity((width * height * 4) as usize);
+    let mut intensity:Vec<u8> = Vec::with_capacity((width * height) as usize);
     for y in 0..height{
         for x in 0..width {
             let pixel = img.get_pixel(x, y);
-            raw_pixels.extend_from_slice(&pixel.0);
+            intensity.push(calculate_grayscale_intensity(&pixel));
+            raw_pixels.push(pixel);
         }
     }
     Ok(raw_pixels)
